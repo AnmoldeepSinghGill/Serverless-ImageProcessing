@@ -1,0 +1,63 @@
+{
+  "Comment": "State Machine To Process newly uploaded file to S3 /images folder",
+  "StartAt": "CheckIfImage",
+  "States": {
+    "CheckIfImage": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Or": [
+            {
+              "Variable": "$.Records[0].s3.object.key",
+              "StringMatches": "*.jpeg"
+            },
+            {
+              "Variable": "$.Records[0].s3.object.key",
+              "StringMatches": "*.png"
+            },
+            {
+              "Variable": "$.Records[0].s3.object.key",
+              "StringMatches": "*.jpg"
+            }
+          ],
+          "Next": "Parallel"
+        }
+      ],
+      "Default": "Bypass",
+      "Comment": "Check If the uploaded object is an image"
+    },
+    "Bypass": {
+      "Type": "Pass",
+      "End": true,
+      "Comment": "Skip to end if uploaded file is not an image"
+    },
+    "Parallel": {
+      "Type": "Parallel",
+      "Branches": [
+        {
+          "StartAt": "DetectImageLabelsDynamoDB",
+          "States": {
+            "DetectImageLabelsDynamoDB": {
+              "Type": "Task",
+              "Resource": "${DetectImageLabelsDynamoDBTask.Arn}",
+              "End": true,
+              "Comment": "Invoke the detect labels dynamo db lambda function"
+            }
+          }
+        },
+        {
+          "StartAt": "GenerateThumbnail",
+          "States": {
+            "GenerateThumbnail": {
+              "Type": "Task",
+              "Resource": "${GenerateThumbnailTask.Arn}",
+              "End": true,
+              "Comment": "invoke generate thumbnail function"
+            }
+          }
+        }
+      ],
+      "End": true
+    }
+  }
+}

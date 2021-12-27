@@ -1,0 +1,123 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Transform": "AWS::Serverless-2016-10-31",
+  "Description": "Gill Lab04 - An AWS Serverless Application to process a uploaded image in s3 bucket /images folder and invoke step functions to recogonize labels from that image (save themto dynamo db) and save the thumbnail in S3 buckets /thumbnails folder..",
+  "Resources": {
+    "DetectImageLabelsDynamoDBTask": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Handler": "Gill-AWSServerlessApp::Gill_AWSServerlessApp.StepFunctionTasks::DetectImageLabelsDynamoDB",
+        "Role": {
+          "Fn::GetAtt": [
+            "LambdaRole",
+            "Arn"
+          ]
+        },
+        "Runtime": "dotnetcore3.1",
+        "MemorySize": 256,
+        "Timeout": 30,
+        "Code": {
+          "S3Bucket": "",
+          "S3Key": ""
+        }
+      }
+    },
+    "GenerateThumbnailTask": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Handler": "Gill-AWSServerlessApp::Gill_AWSServerlessApp.StepFunctionTasks::GenerateThumbnail",
+        "Role": {
+          "Fn::GetAtt": [
+            "LambdaRole",
+            "Arn"
+          ]
+        },
+        "Runtime": "dotnetcore3.1",
+        "MemorySize": 300,
+        "Timeout": 30,
+        "Code": {
+          "S3Bucket": "",
+          "S3Key": ""
+        }
+      }
+    },
+    "StateMachine": {
+      "Type": "AWS::StepFunctions::StateMachine",
+      "Properties": {
+        "RoleArn": {
+          "Fn::GetAtt": [
+            "StateMachineRole",
+            "Arn"
+          ]
+        },
+        "DefinitionString": {
+          "Fn::Sub": ""
+        }
+      }
+    },
+    "LambdaRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Action": [
+                "sts:AssumeRole"
+              ],
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "lambda.amazonaws.com"
+                ]
+              }
+            }
+          ]
+        },
+        "ManagedPolicyArns": [
+          "arn:aws:iam::aws:policy/AWSLambdaExecute",
+          "arn:aws:iam::aws:policy/AmazonS3FullAccess",
+          "arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess",
+          "arn:aws:iam::aws:policy/AmazonRekognitionFullAccess"
+        ]
+      }
+    },
+    "StateMachineRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": {
+                  "Fn::Sub": "states.${AWS::Region}.amazonaws.com"
+                }
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyName": "StepFunctionLambdaInvoke",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "lambda:InvokeFunction"
+                  ],
+                  "Resource": "*"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  },
+  "Outputs": {}
+}
