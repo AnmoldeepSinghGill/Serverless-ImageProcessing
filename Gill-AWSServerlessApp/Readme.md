@@ -1,16 +1,12 @@
-# Step Functions Hello World
+# Step Functions 
 
-This starter project consists of:
+This project consists of:
 
 * serverless.template - An AWS CloudFormation template file for declaring your Serverless functions and other AWS resources
 * state-machine.json -The definition of the Step Function state machine.
 * StepFunctionTasks.cs - This class contains the Lambda functions that the Step Function state machine will call.
 * State.cs - This class represent the state of the step function executions between Lambda function calls.
 * aws-lambda-tools-defaults.json - default argument settings for use with Visual Studio and command line deployment tools for AWS
-
-You may also have a test project depending on the options selected.
-
-The generated project is a simple hello world Step Functions example. It generates 2 Lambda functions that are called as tasks in a state machine. In the state-machine.json file the Step Function state machine is defined that tells the Step Function service in what order to call the Lambda functions. The Step Function execution's state is maintained in the State object which the Lambda functions read from, populate and return. In this example the first Lambda function also returns back a wait time to show how to configure a wait in the state machine.
 
 ### Defining a State Machine
 
